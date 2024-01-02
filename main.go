@@ -2,8 +2,8 @@ package main
 
 import (
 	"golang_restaurant_management/database"
-	"golang_restaurant_management/middleware"
-	"golang_restaurant_management/routes"
+	middleware "golang_restaurant_management/middleware"
+	routes "golang_restaurant_management/routes"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +26,7 @@ func main(){
 	// gin router
 	router := gin.New()
 	router.Use(gin.Logger())
-	router.UserRoutes(router)
+	routes.UserRoutes(router)
 	router.Use(middleware.Authentication())
 
 	routes.FoodRoutes(router)

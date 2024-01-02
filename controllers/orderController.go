@@ -16,9 +16,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 
 var orderCollection *mongo.Collection = database.OpenCollection(database.Client, "order")
-var tableCollection *mongo.Collection = database.OpenCollection(database.Client, "table")
 
 func GetOrders() gin.HandlerFunc {
 	return func(c *gin.Context){
@@ -134,7 +134,7 @@ func UpdateOrder() gin.HandlerFunc {
 		orderId := c.Param("order_id")
 
 
-		if err != c.BindJSON(&order); err != nil {
+		if err := c.BindJSON(&order); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return 
 		}
@@ -142,7 +142,7 @@ func UpdateOrder() gin.HandlerFunc {
 
 
 		if order.Table_id != nil {
-			err := orderCollection.FindOne(ctx, bson.M{"table_id": food.Table_id}).Decode(&table)
+			err := menuCollection.FindOne(ctx, bson.M{"table_id": order.Table_id}).Decode(&table)
 
 			defer cancel()
 
@@ -153,13 +153,13 @@ func UpdateOrder() gin.HandlerFunc {
 			}
 
 
-			updateObj = append(updateObj, bson.E{"menu",order.Table_id})
+			updateObj = append(updateObj, bson.E{Key: "menu",Value: order.Table_id})
 
 
 			// 
 			order.Updated_at , _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 
-			updateObj = append(updateObj, bson.E{"updated_at", order.Updated_at})
+			updateObj = append(updateObj, bson.E{Key: "updated_at", Value: order.Updated_at})
 
 			upsert := true
 			filter := bson.M{"order_id": orderId}
@@ -172,7 +172,7 @@ func UpdateOrder() gin.HandlerFunc {
 				ctx, 
 				filter, 
 				bson.D{
-					{"$st", updateObj},
+					{Key: "$st", Value: updateObj},
 				},
 				&opt,
 			)
@@ -195,7 +195,7 @@ func UpdateOrder() gin.HandlerFunc {
 	}
 }
 
-func OrderItemOrder(order models.Order){
+func OrderItemOrderCreator(order models.Order)string{
 
 	order.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 	order.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
@@ -206,7 +206,7 @@ func OrderItemOrder(order models.Order){
 	orderCollection.InsertOne(ctx, order)
 	defer cancel()
 
-	return order.Order
+	return order.Order_id
 }
 
 
