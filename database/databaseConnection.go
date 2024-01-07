@@ -13,7 +13,7 @@ import (
 
 
 func DBInstance() *mongo.Client {
-	MongoDb := ""
+	MongoDb := "mongodb+srv://digitalparteek:35TAP4RZVPtzmaO9@cluster1.jpqpjku.mongodb.net/?retryWrites=true&w=majority"
 
 	fmt.Println(MongoDb)
 
